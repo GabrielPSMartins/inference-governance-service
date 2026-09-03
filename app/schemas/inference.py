@@ -1,15 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 
 
 class InferenceRequest(BaseModel):
-    """
-    Representa o corpo de uma requisição de inferência enviada
-    pelo cliente.
-    """
-
-    #TODO: Adicionar uma camada de autenticação.
+    """Representa o corpo de uma requisição de inferência enviada"""
 
     prompt: str = Field(
         ...,
@@ -32,4 +27,40 @@ class InferenceRequest(BaseModel):
         ge=0.0,
         le=1.5,
         description="Controla a aleatoriedade da resposta do modelo."
+    )
+
+
+class InferenceResponse(BaseModel):
+    """Representa o corpo da resposta devolvida ao cliente após uma inferência bem-sucedida"""
+
+    request_id: UUID = Field(
+        default_factory=uuid4,
+        description="Identificador único desta requisição, para rastreabilidade e auditoria."
+    )
+    response: str = Field(
+        ...,
+        description="Texto gerado pelo modelo de IA em resposta ao prompt."
+    )
+    model: str = Field(
+        ...,
+        description="Nome/identificador do modelo que gerou esta resposta."
+    )
+    input_tokens: int = Field(
+        ...,
+        ge=0,
+        description="Quantidade de tokens consumidos pelo prompt de entrada."
+    )
+    output_tokens: int = Field(
+        ...,
+        ge=0,
+        description="Quantidade de tokens gerados na resposta pelo modelo."
+    )
+    latency_ms: float = Field(
+        ...,
+        ge=0,
+        description="Tempo total, em milissegundos, entre o recebimento da requisição e a resposta."
+    )
+    temperature: float = Field(
+        ...,
+        description="Temperatura efetivamente utilizada na geração desta resposta."
     )
