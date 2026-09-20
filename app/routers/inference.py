@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.inference import InferenceRequest, InferenceResponse
 from app.services.prompt_guard import contains_prompt_injection
 from app.services.rate_limiter import is_rate_limited
+from app.services.orchestrator import run_inference
 
 router = APIRouter(prefix="/inference", tags=["Inference"])
 
@@ -40,8 +41,8 @@ async def create_inference(
     request: InferenceRequest = Depends(validate_prompt_security),
 ) -> InferenceResponse:
     """
-    Recebe um prompt do cliente e retorna a resposta gerada pelo modelo
-    de IA, junto com metadados de observabilidade (tokens, latência,
-    modelo utilizado).
+    Recebe um prompt do cliente, valida (rate limit + prompt injection),
+    orquestra a chamada ao modelo de IA, e retorna a resposta com
+    metadados de observabilidade.
     """
-    raise NotImplementedError("Camada de Orquestração ainda não implementada")
+    return await run_inference(request)
