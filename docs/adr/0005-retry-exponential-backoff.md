@@ -1,6 +1,6 @@
 # ADR-0005: Retry com Exponential Backoff na chamada ao provedor de LLM
 
-**Status:** Aceito
+**Status:** Superado pelo ADR-0007
 **Data:** 2026-09-20
 
 ## Contexto

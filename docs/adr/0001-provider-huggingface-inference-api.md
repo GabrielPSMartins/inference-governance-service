@@ -1,7 +1,7 @@
 # ADR-0001: Uso da Hugging Face Inference API como provedor de LLM
 
-**Status:** Aceito
-**Data:** 2026-08-20
+**Status:** Superado pelo ADR-0006
+**Data:** 2026-08-21
 
 ## Contexto
 O projeto exige a integração com um provedor de modelo de linguagem (LLM) para

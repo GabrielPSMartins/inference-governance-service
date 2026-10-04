@@ -1,7 +1,7 @@
 # ADR-0002: Abstração do provedor de LLM via interface (Dependency Inversion)
 
 **Status:** Aceito
-**Data:** 2026-08-20
+**Data:** 2026-08-21
 
 ## Contexto
 A decisão registrada no ADR-0001 fixa a Hugging Face Inference API como
