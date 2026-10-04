@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.dependencies import get_provider
+from app.providers.base import LLMProvider
 from app.schemas.inference import InferenceRequest, InferenceResponse
 from app.services.prompt_guard import contains_prompt_injection
 from app.services.rate_limiter import is_rate_limited
@@ -39,10 +41,11 @@ async def validate_prompt_security(
 @router.post("", response_model=InferenceResponse)
 async def create_inference(
     request: InferenceRequest = Depends(validate_prompt_security),
+    provider: LLMProvider = Depends(get_provider),
 ) -> InferenceResponse:
     """
     Recebe um prompt do cliente, valida (rate limit + prompt injection),
     orquestra a chamada ao modelo de IA, e retorna a resposta com
     metadados de observabilidade.
     """
-    return await run_inference(request)
+    return await run_inference(request, provider)
