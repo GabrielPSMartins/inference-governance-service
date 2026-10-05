@@ -1,8 +1,6 @@
 import time
 
-from app.core.config import settings
-from app.providers.base import ProviderResponse
-from app.providers.groq import GroqProvider
+from app.providers.base import LLMProvider, ProviderResponse
 from app.schemas.inference import InferenceRequest, InferenceResponse
 
 SYSTEM_PROMPT = """
@@ -24,21 +22,21 @@ Siga rigorosamente estas diretrizes em todas as respostas:
    - Mantenha um tom profissional, amigável e prestativo, evitando respostas robotizadas ou condescendentes.
 """
 
-_provider = GroqProvider(
-    model=settings.groq_model,
-    api_key=settings.groq_api_key,
-)
 
-
-async def run_inference(request: InferenceRequest) -> InferenceResponse:
+async def run_inference(
+    request: InferenceRequest, provider: LLMProvider
+) -> InferenceResponse:
     """
     Orquestra a chamada ao provedor de LLM: monta o prompt final,
     mede latência, e formata o resultado bruto do provider como
     InferenceResponse, pronto para devolver ao cliente.
+
+    O provider chega por parâmetro em vez de ser criado aqui, para que o
+    orquestrador dependa só do contrato LLMProvider (ADR-0002).
     """
     start_time = time.perf_counter()
 
-    provider_response: ProviderResponse = await _provider.generate(
+    provider_response: ProviderResponse = await provider.generate(
         prompt=request.prompt,
         system_prompt=SYSTEM_PROMPT,
         max_tokens=request.max_tokens,

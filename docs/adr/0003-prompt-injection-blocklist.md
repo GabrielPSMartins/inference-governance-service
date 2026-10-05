@@ -1,7 +1,7 @@
 # ADR-0003: Detecção de prompt injection via blocklist de padrões
 
 **Status:** Aceito
-**Data:** 2026-08-20
+**Data:** 2026-09-04
 
 ## Contexto
 A Camada de Validação/Segurança precisa detectar tentativas de manipulação

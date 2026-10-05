@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 from uuid import UUID, uuid4
 
 
@@ -16,13 +15,13 @@ class InferenceRequest(BaseModel):
         ...,
         description="Identificador único do usuário, usado para rastreabilidade e governança."
     )
-    max_tokens: Optional[int] = Field(
+    max_tokens: int = Field(
         default=256,
         ge=1,
         le=1024,
         description="Número máximo de tokens que o modelo pode gerar na resposta."
     )
-    temperature: Optional[float] = Field(
+    temperature: float = Field(
         default=0.7,
         ge=0.0,
         le=1.5,

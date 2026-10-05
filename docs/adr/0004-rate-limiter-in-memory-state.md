@@ -1,7 +1,7 @@
 # ADR-0004: Estado do Rate Limiter em memória local do processo
 
 **Status:** Aceito
-**Data:** 2026-08-20
+**Data:** 2026-09-10
 
 ## Contexto
 A Camada de Validação/Segurança precisa impedir abuso por volume de
