@@ -12,6 +12,8 @@ class ProviderResponse:
     model: str
     input_tokens: int
     output_tokens: int
+    finish_reason: str | None = None
+    reasoning_tokens: int | None = None
 
 
 class LLMProvider(Protocol):

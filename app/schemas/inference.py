@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from uuid import UUID, uuid4
+from uuid import UUID
 
 
 class InferenceRequest(BaseModel):
@@ -33,8 +33,9 @@ class InferenceResponse(BaseModel):
     """Representa o corpo da resposta devolvida ao cliente após uma inferência bem-sucedida"""
 
     request_id: UUID = Field(
-        default_factory=uuid4,
-        description="Identificador único desta requisição, para rastreabilidade e auditoria."
+        ...,
+        description="Identificador único desta requisição, para rastreabilidade e auditoria. "
+                    "É o mesmo valor do header X-Request-ID e do campo request_id dos logs."
     )
     response: str = Field(
         ...,
@@ -57,7 +58,8 @@ class InferenceResponse(BaseModel):
     latency_ms: float = Field(
         ...,
         ge=0,
-        description="Tempo total, em milissegundos, entre o recebimento da requisição e a resposta."
+        description="Tempo, em milissegundos, da chamada ao provedor de IA. "
+                    "A latência total do serviço vem no header X-Process-Time-Ms."
     )
     temperature: float = Field(
         ...,

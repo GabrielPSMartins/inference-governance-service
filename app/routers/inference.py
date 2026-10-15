@@ -1,11 +1,16 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.logging import log_event
 from app.dependencies import get_provider
 from app.providers.base import LLMProvider
 from app.schemas.inference import InferenceRequest, InferenceResponse
 from app.services.prompt_guard import contains_prompt_injection
 from app.services.rate_limiter import is_rate_limited
 from app.services.orchestrator import run_inference
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/inference", tags=["Inference"])
 
@@ -16,6 +21,14 @@ async def validate_rate_limit(payload: InferenceRequest) -> InferenceRequest:
     requisições permitidas na janela de tempo configurada.
     """
     if is_rate_limited(payload.user_id):
+        log_event(
+            logger,
+            logging.WARNING,
+            "request_blocked",
+            reason="rate_limit",
+            user_id=str(payload.user_id),
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Limite de requisições excedido. Tente novamente mais tarde.",
@@ -31,6 +44,14 @@ async def validate_prompt_security(
     de prompt injection. Executa após a checagem de rate limit.
     """
     if contains_prompt_injection(payload.prompt):
+        log_event(
+            logger,
+            logging.WARNING,
+            "request_blocked",
+            reason="prompt_injection",
+            user_id=str(payload.user_id),
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Prompt bloqueado: conteúdo suspeito de manipulação do sistema.",
