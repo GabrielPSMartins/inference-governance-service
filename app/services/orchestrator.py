@@ -1,7 +1,13 @@
+import logging
 import time
 
+from app.core.context import get_request_id
+from app.core.logging import log_event
 from app.providers.base import LLMProvider, ProviderResponse
+from app.providers.errors import ProviderError
 from app.schemas.inference import InferenceRequest, InferenceResponse
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = """
 Você é um assistente de IA altamente capaz, neutro, direto e honesto.
@@ -31,25 +37,59 @@ async def run_inference(
     mede latência, e formata o resultado bruto do provider como
     InferenceResponse, pronto para devolver ao cliente.
 
+    Loga só metadados da chamada (ADR-0008): nem o prompt nem a resposta.
+
     O provider chega por parâmetro em vez de ser criado aqui, para que o
     orquestrador dependa só do contrato LLMProvider (ADR-0002).
     """
     start_time = time.perf_counter()
 
-    provider_response: ProviderResponse = await provider.generate(
-        prompt=request.prompt,
-        system_prompt=SYSTEM_PROMPT,
-        max_tokens=request.max_tokens,
-        temperature=request.temperature,
+    try:
+        provider_response: ProviderResponse = await provider.generate(
+            prompt=request.prompt,
+            system_prompt=SYSTEM_PROMPT,
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+        )
+    except ProviderError as exc:
+        log_event(
+            logger,
+            logging.ERROR,
+            "provider_error",
+            user_id=str(request.user_id),
+            error_type=exc.error_type,
+            detail=str(exc),
+            upstream_status_code=exc.upstream_status_code,
+            status_code=exc.status_code,
+            provider_latency_ms=_elapsed_ms(start_time),
+        )
+        raise
+
+    provider_latency_ms = _elapsed_ms(start_time)
+
+    log_event(
+        logger,
+        logging.INFO,
+        "inference_completed",
+        user_id=str(request.user_id),
+        model=provider_response.model,
+        input_tokens=provider_response.input_tokens,
+        output_tokens=provider_response.output_tokens,
+        reasoning_tokens=provider_response.reasoning_tokens,
+        finish_reason=provider_response.finish_reason,
+        provider_latency_ms=provider_latency_ms,
     )
 
-    elapsed_ms = (time.perf_counter() - start_time) * 1000
-
     return InferenceResponse(
+        request_id=get_request_id(),
         response=provider_response.text,
         model=provider_response.model,
         input_tokens=provider_response.input_tokens,
         output_tokens=provider_response.output_tokens,
-        latency_ms=elapsed_ms,
+        latency_ms=provider_latency_ms,
         temperature=request.temperature,
     )
+
+
+def _elapsed_ms(start_time: float) -> float:
+    return round((time.perf_counter() - start_time) * 1000, 2)
